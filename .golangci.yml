@@ -1,0 +1,77 @@
+# https://github.com/golangci/golangci-lint
+
+version: "2"
+
+linters:
+  default: none
+
+  enable:
+    - errcheck # все возвращённые ошибки должны обрабатываться
+    - govet # официальный go vet
+    - staticcheck # SA-* статический анализ
+    - revive # конвенции Go
+
+    - gosec # хардкод секретов, слабая криптография
+
+    - gocritic # лучшие практики: diagnostic / performance / style / opinionated
+    - exhaustive # switch по enum-подобным типам должен покрывать все кейсы.
+    - unparam # неиспользуемые параметры функций / всегда одинаковые возвращаемые значения
+    - errorlint # безопасная обработка ошибок
+
+    - perfsprint # strconv вместо fmt.Sprintf для простых преобразований
+    - usestdlibvars # константы stdlib (http.StatusOK вместо 200)
+    - copyloopvar # лишняя копия переменной цикла (после Go 1.22 она не нужна)
+    - intrange # for i := range n вместо классического for i := 0; i < n; i++
+
+    - nilerr # return nil при err != nil
+    - wastedassign # присваивания, значение которых перезаписывается до использования
+    - ineffassign # присваивания, которые вообще никогда не читаются (дополняет wastedassign)
+    - forcetypeassert # type assertion без ok-формы: x := y.(T).
+      # Дополняет errcheck.check-type-assertions (тот ловит только x, _ := y.(T)).
+      # В IR-коде будет много кастов к узлам go/ast — наш профиль риска
+
+    - dupword # повторяющиеся слова подряд в комментариях и строках
+    - whitespace # лишние/некорректные пустые строки
+
+    - nolintlint # //nolint обязан называть линтер и объяснять причину
+
+    - thelper # t.Helper() в тестовых хелперах — падение укажет на реальный тест, а не на хелпер
+    - testpackage # тесты во внешнем пакете foo_test — через публичный API
+
+  settings:
+    errcheck:
+      check-type-assertions: true # x, _ := y.(T) — нельзя игнорировать assert ошибку
+      check-blank: true # _ = f() — нельзя игнорировать возвращённую ошибку
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - performance
+        - style
+        - opinionated
+    govet:
+      enable:
+        - shadow # затенение переменных; в дефолтный go vet не входит
+    nolintlint:
+      require-explanation: true # у каждого //nolint должна быть причина
+      require-specific: true # никаких голых //nolint — только //nolint:<линтер>
+    revive:
+      rules:
+        - name: var-naming
+        - name: error-return
+        - name: unexported-return
+        - name: context-as-argument
+        - name: error-naming
+        - name: error-strings
+        - name: errorf
+
+  exclusions:
+    presets: [] # строгий режим: без дефолтных исключений
+
+issues:
+  max-issues-per-linter: 0 # 0 = без лимита, показывать всё
+  max-same-issues: 0 # 0 = не сворачивать повторяющиеся
+
+formatters:
+  enable:
+    - gofumpt # строже gofmt, включает его правила (поэтому gofmt отдельно не нужен)
+    - goimports # порядок и группировка импортов
